@@ -4,36 +4,11 @@
 #include "../beatsaber-hook/shared/customui/customui.hpp"
     CustomUI::TextObject MISSED;
     CustomUI::TextObject HIT;
-    CustomUI::TextObject ACC;
     int hit = 0;
     int missed = 0;
     int notes;
-    int NotesLeft;
-int GetNotesCountDifficultyFromBeatmap(Il2CppObject* beatmap) {
-    int notesCount;
-    il2cpp_utils::RunMethod(&notesCount, beatmap, "get_notesCount");
-    log(DEBUG, "Got notesCount: %d", notesCount);
-    return notesCount;
-}
-void accStart(Il2CppObject* self)
-{
-    Il2CppObject* levelName = il2cpp_utils::GetFieldValue(self, "_scoreText");
-    Il2CppObject* levelNameTransform;
-    Il2CppObject* levelNameParent;
-    if(il2cpp_utils::RunMethod(&levelNameTransform, levelName, "get_transform"))
-    {
-        log(DEBUG,"oopsies sorry sister! 1");
-    }
-    if(il2cpp_utils::RunMethod(&levelNameParent, levelNameTransform, "GetParent"))
-    {
-        log(DEBUG,"oopsies sorry sister! 2");
-    }
-    ACC.text = "\n \n \n \n \n "+ std::to_string(notes);
-    ACC.fontSize = 12.0F;
-    ACC.parentTransform = levelNameParent;
-    ACC.create();
-}
-void missStart(Il2CppObject* self)
+
+MAKE_HOOK_OFFSETLESS(missStart, void, Il2CppObject* self)
 {
     //text
     missed = 0;
@@ -52,8 +27,9 @@ void missStart(Il2CppObject* self)
     MISSED.fontSize = 12.0F;        
     MISSED.parentTransform = levelNameParent;
     MISSED.create();
+    missStart(self);
 }
- void hitStart(Il2CppObject* self)
+MAKE_HOOK_OFFSETLESS(hitStart, void, Il2CppObject* self)
 {
     hit = 0;
     Il2CppObject* levelName = il2cpp_utils::GetFieldValue(self, "_scoreText");
@@ -71,48 +47,54 @@ void missStart(Il2CppObject* self)
     HIT.fontSize = 12.0F;
     HIT.parentTransform = levelNameParent;
     HIT.create();
+    hitStart(self);
 }
 
     //Song Score UI
-MAKE_HOOK_OFFSETLESS(MissedStart, void, Il2CppObject* self) {
-    missStart(self);
-    hitStart(self);
-    accStart(self);
-}
-MAKE_HOOK_OFFSETLESS(SongStart, void, Il2CppObject* self, Il2CppObject* difficultyBeatmap, Il2CppObject* overrideEnvironmentSettings, Il2CppObject* overrideColorScheme, Il2CppObject* gameplayModifiers, Il2CppObject* playerSpecificSettings, Il2CppObject* practiceSettings, Il2CppString* backButtonText, bool useTestNoteCutSoundEffects) {
-
-    notes =  GetNotesCountDifficultyFromBeatmap(il2cpp_utils::GetFieldValue(difficultyBeatmap, "beatmapData"));
-    //il2cpp_utils::RunMethod(&notes, il2cpp_utils::GetFieldValue(difficultyBeatmap, "beatmapData"), "get_notesCount");
-    SongStart(self, difficultyBeatmap, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
-}
 
 
 //total missed notes
-MAKE_HOOK_OFFSETLESS(SendNoteWasMissedEvent, void, Il2CppObject* self)  {
-    NotesLeft--;
+MAKE_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, void, Il2CppObject* self)  {
     missed++;   
-    MISSED.text = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) ;
-    SendNoteWasMissedEvent(self);
+    il2cpp_utils::RunMethod(MISSED.textMesh , "set_text", il2cpp_utils::createcsstr("\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed)));
+    HandleComboBreakingEventHappened(self);
+}
+
+MAKE_HOOK_OFFSETLESS(GetLevelDetails, void, Il2CppObject* self)  {
+    il2cpp_utils::GetFieldValue(&notes, il2cpp_utils::GetFieldValue(self, "_levelParamsPanel"), "_notesCountText");
+    GetLevelDetails(self);
 }
 
 
+
 //total hit notes
-MAKE_HOOK_OFFSETLESS(HandleNoteWasCut, void, Il2CppObject* self,Il2CppObject* noteController, Il2CppObject* noteCutInfo)
+MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject* self, Il2CppObject* noteSpawnController, Il2CppObject* noteController, Il2CppObject* noteCutInfo)
 {
-    NotesLeft--;
-    HandleNoteWasCut(self, noteController, noteCutInfo);
+    bool allIsOK;
+    if (!il2cpp_utils::RunMethod(&allIsOK, noteCutInfo, "get_allIsOK")) {
+        log(CRITICAL, "Failed to get_allIsOK");
+    }
+    if(allIsOK)
+    {
     hit++;
-    HIT.text = "\n \n \n \n All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
+    il2cpp_utils::RunMethod(HIT.textMesh    , "set_text", il2cpp_utils::createcsstr("\n \n \n \n All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit)));
+    }
+    else
+    {
+        missed++;   
+        il2cpp_utils::RunMethod(MISSED.textMesh , "set_text", il2cpp_utils::createcsstr("\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed)));
+    }
+    
+    HandleNoteWasCutEvent(self, noteSpawnController, noteController, noteCutInfo);
 }
     
 extern "C" void load() {
     log(INFO, "Hello from il2cpp_init!");
     log(INFO, "Installing hooks...");
-    INSTALL_HOOK_OFFSETLESS(MissedStart, il2cpp_utils::FindMethodUnsafe("", "ScoreUIController", "Start", 0));
-    INSTALL_HOOK_OFFSETLESS(SendNoteWasMissedEvent, il2cpp_utils::FindMethodUnsafe("", "NoteController", "SendNoteWasMissedEvent", 0));
-    INSTALL_HOOK_OFFSETLESS(HandleNoteWasCut, il2cpp_utils::FindMethodUnsafe("", "BeatmapObjectSpawnController", "HandleNoteWasCut", 2));
-     INSTALL_HOOK_OFFSETLESS(SongStart, il2cpp_utils::FindMethodUnsafe("", "StandardLevelScenesTransitionSetupDataSO", "Init", 8));
-
-
+    INSTALL_HOOK_OFFSETLESS(hitStart, il2cpp_utils::FindMethodUnsafe("", "ScoreUIController", "Start", 0));   
+    INSTALL_HOOK_OFFSETLESS(missStart, il2cpp_utils::FindMethodUnsafe("", "ScoreUIController", "Start", 0));    
+    INSTALL_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, il2cpp_utils::FindMethodUnsafe("", "ComboUIController", "HandleComboBreakingEventHappened", 0));
+    INSTALL_HOOK_OFFSETLESS(HandleNoteWasCutEvent, il2cpp_utils::FindMethodUnsafe("", "ScoreController", "HandleNoteWasCutEvent", 3));   
+    INSTALL_HOOK_OFFSETLESS(GetLevelDetails, il2cpp_utils::FindMethodUnsafe("", "StandardLevelDetailView", "RefreshContent", 0));   
     log(INFO, "Installed all hooks!");
 }

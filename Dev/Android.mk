@@ -28,11 +28,11 @@ LOCAL_CFLAGS     := -D"MOD_ID=\"CountersPlus\"" -D"VERSION=\"0.1.0\"" -I"C:/Prog
 LOCAL_MODULE     := CountersPlus
 LOCAL_CPPFLAGS   := -std=c++2a
 LOCAL_C_INCLUDES := ./include ./src
-LOCAL_SRC_FILES  := $(call rwildcard,extern/beatsaber-hook/shared/inline-hook/,*.cpp) $(call rwildcard,extern/beatsaber-hook/shared/utils/,*.cpp) $(call rwildcard,extern/beatsaber-hook/shared/inline-hook/,*.c)
+LOCAL_SRC_FILES  := $(call rwildcard,beatsaber-hook/shared/inline-hook/,*.cpp) $(call rwildcard,beatsaber-hook/shared/utils/,*.cpp) $(call rwildcard,beatsaber-hook/shared/inline-hook/,*.c)
 # In order to add configuration support to your project, uncomment the following line:
 # LOCAL_SRC_FILES  += $(call rwildcard,extern/beatsaber-hook/shared/config/,*.cpp)
 # In order to add custom UI support to your project, uncomment the following line:
-LOCAL_SRC_FILES  += $(call rwildcard,extern/beatsaber-hook/shared/customui/,*.cpp)
+LOCAL_SRC_FILES  += $(call rwildcard,beatsaber-hook/shared/customui/,*.cpp)
 # Add any new SRC includes from beatsaber-hook or other external libraries here
 LOCAL_SRC_FILES  += $(call rwildcard,src/,*.cpp)
 include $(BUILD_SHARED_LIBRARY)
