@@ -1,0 +1,25 @@
+{
+    "id": "CountersPlus",
+    "name": "Counters Plus",
+    "author": "Futuremappermydud",
+    "description": [
+        
+        "ooh eeh pog pog pog hoo nee chA"
+        
+    ],
+    "category": "Gameplay",
+    "gameVersion": "1.7.0",
+    "version": "0.1.0",
+    "platform": "Quest",
+    "components": [
+        {
+            "type": "HookMod",
+            "installAction": {
+                "installLibraryFile": "libCountersPlus.so"
+            },
+            "uninstallAction": {
+                "removeLibraryFile": "libCountersPlus.so"
+            }
+        }
+    ]
+}
