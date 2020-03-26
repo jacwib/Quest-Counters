@@ -57,7 +57,7 @@ MAKE_HOOK_OFFSETLESS(Start, void, Il2CppObject* self) {
 //total missed notes
 MAKE_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, void, Il2CppObject* self)  {
     missed++;   
-    MISSED.text = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) ;
+    MISSED.text = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) + "test";
     HandleComboBreakingEventHappened(self);
 }
 
@@ -66,7 +66,7 @@ MAKE_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, void, Il2CppObject* self)
 MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject* self, Il2CppObject* noteSpawnController, Il2CppObject* noteController, Il2CppObject* noteCutInfo)
 {
     hit++;
-    HIT.text = "\n \n \n \n All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
+    HIT.text = "\n \n \n \n All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit) + "test";
      HandleNoteWasCutEvent(self, noteSpawnController, noteController, noteCutInfo);
 }
     
