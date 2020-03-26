@@ -1,6 +1,6 @@
-# POG SCORES
+# Quest Counters
 
-ooh eeh pog pog pog hoo nee chA
+  A mod hoping too acheive a near port of Caedens Counters Plus for PC https://github.com/Caeden117/CountersPlus
 
 ## Credits
 
