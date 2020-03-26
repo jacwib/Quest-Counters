@@ -6,6 +6,7 @@
     CustomUI::TextObject HIT;
     int hit = 0;
     int missed = 0;
+
 void missStart(Il2CppObject* self)
 {
     //text
@@ -47,32 +48,33 @@ void missStart(Il2CppObject* self)
 }
 
     //Song Score UI
-MAKE_HOOK_OFFSETLESS(MissedStart, void, Il2CppObject* self) {
+MAKE_HOOK_OFFSETLESS(Start, void, Il2CppObject* self) {
     missStart(self);
     hitStart(self);
+    Start(self);
 }
 
 //total missed notes
-MAKE_HOOK_OFFSETLESS(SendNoteWasMissedEvent, void, Il2CppObject* self)  {
+MAKE_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, void, Il2CppObject* self)  {
     missed++;   
     MISSED.text = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) ;
-    SendNoteWasMissedEvent(self);
+    HandleComboBreakingEventHappened(self);
 }
 
 
 //total hit notes
-MAKE_HOOK_OFFSETLESS(HandleNoteWasCut, void, Il2CppObject* self,Il2CppObject* noteController, Il2CppObject* noteCutInfo)
+MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject* self, Il2CppObject* noteSpawnController, Il2CppObject* noteController, Il2CppObject* noteCutInfo)
 {
-    HandleNoteWasCut(self, noteController, noteCutInfo);
     hit++;
     HIT.text = "\n \n \n \n All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
+     HandleNoteWasCutEvent(self, noteSpawnController, noteController, noteCutInfo);
 }
     
 extern "C" void load() {
     log(INFO, "Hello from il2cpp_init!");
     log(INFO, "Installing hooks...");
-    INSTALL_HOOK_OFFSETLESS(MissedStart, il2cpp_utils::FindMethodUnsafe("", "ScoreUIController", "Start", 0));
-    INSTALL_HOOK_OFFSETLESS(SendNoteWasMissedEvent, il2cpp_utils::FindMethodUnsafe("", "NoteController", "SendNoteWasMissedEvent", 0));
-    INSTALL_HOOK_OFFSETLESS(HandleNoteWasCut, il2cpp_utils::FindMethodUnsafe("", "BeatmapObjectSpawnController", "HandleNoteWasCut", 2));   
+    INSTALL_HOOK_OFFSETLESS(Start, il2cpp_utils::FindMethodUnsafe("", "ScoreUIController", "Start", 0));
+    INSTALL_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, il2cpp_utils::FindMethodUnsafe("", "ComboUIController", "HandleComboBreakingEventHappened", 0));
+    INSTALL_HOOK_OFFSETLESS(HandleNoteWasCutEvent, il2cpp_utils::FindMethodUnsafe("", "ScoreController", "HandleNoteWasCutEvent", 3));   
     log(INFO, "Installed all hooks!");
 }
