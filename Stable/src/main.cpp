@@ -1,7 +1,7 @@
-#include "../extern/beatsaber-hook/shared/utils/utils.h"
-#include "../extern/beatsaber-hook/shared/utils/il2cpp-utils.hpp"
-#include "../extern/beatsaber-hook/shared/utils/il2cpp-functions.hpp"
-#include "../extern/beatsaber-hook/shared/customui/customui.hpp"
+#include "../beatsaber-hook/shared/utils/utils.h"
+#include "../beatsaber-hook/shared/utils/il2cpp-utils.hpp"
+#include "../beatsaber-hook/shared/utils/il2cpp-functions.hpp"
+#include "../beatsaber-hook/shared/customui/customui.hpp"
     CustomUI::TextObject MISSED;
     CustomUI::TextObject HIT;
     int hit = 0;
