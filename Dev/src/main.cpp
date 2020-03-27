@@ -79,7 +79,7 @@ MAKE_HOOK_OFFSETLESS(NotesStart, void, Il2CppObject* self)
     {
         log(DEBUG,"oopsies sorry sister! 6");
     }
-    Notes.text = "\n Notes: " + notes;
+    Notes.text = "\n \n \n \n \n Notes: " + notes;
     Notes.fontSize = 12.0F;
     Notes.parentTransform = levelNameParent;
     Notes.create();
@@ -113,6 +113,7 @@ extern "C" void load() {
     INSTALL_HOOK_OFFSETLESS(hitStart, il2cpp_utils::FindMethodUnsafe("", "ScoreUIController", "Start", 0));   
     INSTALL_HOOK_OFFSETLESS(missStart, il2cpp_utils::FindMethodUnsafe("", "ScoreUIController", "Start", 0));    
     INSTALL_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, il2cpp_utils::FindMethodUnsafe("", "ComboUIController", "HandleComboBreakingEventHappened", 0));
+    INSTALL_HOOK_OFFSETLESS(GetLevelDetails, il2cpp_utils::FindMethodUnsafe("", "NotesStart", "Start", 0));   
     INSTALL_HOOK_OFFSETLESS(HandleNoteWasCutEvent, il2cpp_utils::FindMethodUnsafe("", "ScoreController", "HandleNoteWasCutEvent", 3));   
     INSTALL_HOOK_OFFSETLESS(GetLevelDetails, il2cpp_utils::FindMethodUnsafe("", "StandardLevelDetailView", "RefreshContent", 0));   
     log(INFO, "Installed all hooks!");
