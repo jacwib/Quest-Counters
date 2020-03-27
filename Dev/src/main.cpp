@@ -79,7 +79,7 @@ MAKE_HOOK_OFFSETLESS(NotesStart, void, Il2CppObject* self)
     {
         log(DEBUG,"oopsies sorry sister! 6");
     }
-    Notes.text = "\n Notes: " + notes;
+    Notes.text = std::string("<align=center>\n Notes: ") + notes + std::string("/align");
     Notes.fontSize = 12.0F;
     Notes.parentTransform = levelNameParent;
     Notes.create();
@@ -96,7 +96,7 @@ MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject* self, Il2CppObje
     if(allIsOK)
     {
     hit++;
-    il2cpp_utils::RunMethod(HIT.textMesh    , "set_text", il2cpp_utils::createcsstr("\n \n \n \n All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit)));
+    il2cpp_utils::RunMethod(HIT.textMesh, "set_text", il2cpp_utils::createcsstr("\n \n \n \n All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit)));
     }
     else
     {
