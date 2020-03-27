@@ -4,6 +4,7 @@
 #include "../beatsaber-hook/shared/customui/customui.hpp"
     CustomUI::TextObject MISSED;
     CustomUI::TextObject HIT;
+    CustomUI::TextObject Notes;
     int hit = 0;
     int missed = 0;
     int notes;
@@ -65,7 +66,25 @@ MAKE_HOOK_OFFSETLESS(GetLevelDetails, void, Il2CppObject* self)  {
     GetLevelDetails(self);
 }
 
-
+MAKE_HOOK_OFFSETLESS(NotesStart, void, Il2CppObject* self)
+{
+    Il2CppObject* levelName = il2cpp_utils::GetFieldValue(self, "_energyBar");
+    Il2CppObject* levelNameTransform;
+    Il2CppObject* levelNameParent;
+    if(il2cpp_utils::RunMethod(&levelNameTransform, levelName, "get_transform"))
+    {
+        log(DEBUG,"oopsies sorry sister! 5");
+    }
+    if(il2cpp_utils::RunMethod(&levelNameParent, levelNameTransform, "GetParent"))
+    {
+        log(DEBUG,"oopsies sorry sister! 6");
+    }
+    Notes.text = "\n Notes: " + notes;
+    Notes.fontSize = 12.0F;
+    Notes.parentTransform = levelNameParent;
+    Notes.create();
+    NotesStart(self);
+}
 
 //total hit notes
 MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject* self, Il2CppObject* noteSpawnController, Il2CppObject* noteController, Il2CppObject* noteCutInfo)
