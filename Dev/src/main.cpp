@@ -61,13 +61,9 @@ MAKE_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, void, Il2CppObject* self)
     HandleComboBreakingEventHappened(self);
 }
 
-MAKE_HOOK_OFFSETLESS(GetLevelDetails, void, Il2CppObject* self)  {
-    il2cpp_utils::GetFieldValue(&notes, il2cpp_utils::GetFieldValue(self, "_levelParamsPanel"), "_notesCountText");
-    GetLevelDetails(self);
-}
-
 MAKE_HOOK_OFFSETLESS(NotesStart, void, Il2CppObject* self)
 {
+    //il2cpp_utils::RunMethod(&notes, il2cpp_utils::GetClassFromName("", "BeatmapData"), "get_notesCount");
     Il2CppObject* levelName = il2cpp_utils::GetFieldValue(self, "_energyBar");
     Il2CppObject* levelNameTransform;
     Il2CppObject* levelNameParent;
@@ -79,7 +75,7 @@ MAKE_HOOK_OFFSETLESS(NotesStart, void, Il2CppObject* self)
     {
         log(DEBUG,"oopsies sorry sister! 6");
     }
-    Notes.text = std::string("<align=center>\n Notes: ") + notes + std::string("/align");
+    Notes.text = std::string("<align=center>\n Notes: ") + notes + std::string("</align>");
     Notes.fontSize = 12.0F;
     Notes.parentTransform = levelNameParent;
     Notes.create();
@@ -115,6 +111,5 @@ extern "C" void load() {
     INSTALL_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, il2cpp_utils::FindMethodUnsafe("", "ComboUIController", "HandleComboBreakingEventHappened", 0));
     INSTALL_HOOK_OFFSETLESS(NotesStart, il2cpp_utils::FindMethodUnsafe("", "GameEnergyUIPanel", "Start", 0));   
     INSTALL_HOOK_OFFSETLESS(HandleNoteWasCutEvent, il2cpp_utils::FindMethodUnsafe("", "ScoreController", "HandleNoteWasCutEvent", 3));   
-    INSTALL_HOOK_OFFSETLESS(GetLevelDetails, il2cpp_utils::FindMethodUnsafe("", "StandardLevelDetailView", "RefreshContent", 0));   
     log(INFO, "Installed all hooks!");
 }
