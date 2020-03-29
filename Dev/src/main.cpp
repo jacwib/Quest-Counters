@@ -10,7 +10,7 @@
     int missed = 0;
     int NotesPassed;
     int NotesCount;
-    bool _360;
+    bool _360 = false;
     //int notesLeft;
 float SafeDivideScore(int total, int count)
     {
@@ -124,7 +124,7 @@ MAKE_HOOK_OFFSETLESS(GetNotes, void, Il2CppObject* self, Il2CppObject* difficult
     GetNotes(self, difficultyBeatmap, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
 }
 
-MAKE_HOOK_OFFSETLESS(Get360, void, Il2CppObject* self)
+/*MAKE_HOOK_OFFSETLESS(Get360, void, Il2CppObject* self)
 {
     Il2CppObject *sceneSetupDataObj;
 	Il2CppObject *difficultyBeatmapObj;
@@ -153,10 +153,9 @@ MAKE_HOOK_OFFSETLESS(Get360, void, Il2CppObject* self)
 	}
 	else
 	{
-        _360 = false;
-	}
+        _360 = false;z
     Get360(self);
-}
+}*/
 
 
 
@@ -169,6 +168,6 @@ extern "C" void load() {
     INSTALL_HOOK_OFFSETLESS(NotesStart, il2cpp_utils::FindMethodUnsafe("", "GameEnergyUIPanel", "Start", 0));   
     INSTALL_HOOK_OFFSETLESS(HandleNoteWasCutEvent, il2cpp_utils::FindMethodUnsafe("", "ScoreController", "HandleNoteWasCutEvent", 2));  
     INSTALL_HOOK_OFFSETLESS(GetNotes, il2cpp_utils::FindMethodUnsafe("", "StandardLevelScenesTransitionSetupDataSO", "Init", 8)); 
-    INSTALL_HOOK_OFFSETLESS(Get360, il2cpp_utils::FindMethodUnsafe("", "GameCoreSceneSetup", "InstallBindings", 0)); 
+    //INSTALL_HOOK_OFFSETLESS(Get360, il2cpp_utils::FindMethodUnsafe("", "GameCoreSceneSetup", "InstallBindings", 0)); 
     log(INFO, "Installed all hooks!");
 }
