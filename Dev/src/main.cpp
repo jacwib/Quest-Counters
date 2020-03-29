@@ -1,3 +1,4 @@
+#include <cmath>
 #include "../beatsaber-hook/shared/utils/utils.h"
 #include "../beatsaber-hook/shared/utils/il2cpp-utils.hpp"
 #include "../beatsaber-hook/shared/utils/il2cpp-functions.hpp"
@@ -7,8 +8,20 @@
     CustomUI::TextObject Notes;
     int hit = 0;
     int missed = 0;
-    std::string notes;
-
+    int NotesPassed;
+    int NotesCount;
+    bool _360;
+    //int notesLeft;
+float SafeDivideScore(int total, int count)
+    {
+        float result = round(((double)(total)) / (count));
+        return result;
+    }
+void UpdateNotesLeft()
+    {
+        NotesCount -= 1;
+        il2cpp_utils::RunMethod(Notes.textMesh , "set_text", il2cpp_utils::createcsstr("\n Notes Left: " + std::to_string(NotesCount)));
+    }
 MAKE_HOOK_OFFSETLESS(missStart, void, Il2CppObject* self)
 {
     //text
@@ -50,12 +63,8 @@ MAKE_HOOK_OFFSETLESS(hitStart, void, Il2CppObject* self)
     HIT.create();
     hitStart(self);
 }
-
-    //Song Score UI
-
-
-//total missed notes
 MAKE_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, void, Il2CppObject* self)  {
+    UpdateNotesLeft();
     missed++;   
     il2cpp_utils::RunMethod(MISSED.textMesh , "set_text", il2cpp_utils::createcsstr("\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed)));
     HandleComboBreakingEventHappened(self);
@@ -63,7 +72,7 @@ MAKE_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, void, Il2CppObject* self)
 
 MAKE_HOOK_OFFSETLESS(NotesStart, void, Il2CppObject* self)
 {
-    //il2cpp_utils::RunMethod(&notes, il2cpp_utils::GetClassFromName("", "BeatmapData"), "get_notesCount");
+    
     Il2CppObject* levelName = il2cpp_utils::GetFieldValue(self, "_energyBar");
     Il2CppObject* levelNameTransform;
     Il2CppObject* levelNameParent;
@@ -75,15 +84,15 @@ MAKE_HOOK_OFFSETLESS(NotesStart, void, Il2CppObject* self)
     {
         log(DEBUG,"oopsies sorry sister! 6");
     }
-    Notes.text = std::string("<align=center>\n Notes: ") + notes + std::string("</align>");
-    Notes.fontSize = 12.0F;
+Notes.text = std::string("           \n Notes Left: ") + std::to_string(NotesCount);
+    Notes.fontSize = 15.0F;
     Notes.parentTransform = levelNameParent;
     Notes.create();
     NotesStart(self);
 }
 
 //total hit notes
-MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject* self, Il2CppObject* noteSpawnController, Il2CppObject* noteController, Il2CppObject* noteCutInfo)
+MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject* self, Il2CppObject* noteController, Il2CppObject* noteCutInfo)
 {
     bool allIsOK;
     if (!il2cpp_utils::RunMethod(&allIsOK, noteCutInfo, "get_allIsOK")) {
@@ -91,18 +100,57 @@ MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject* self, Il2CppObje
     }
     if(allIsOK)
     {
-    hit++;
-    il2cpp_utils::RunMethod(HIT.textMesh, "set_text", il2cpp_utils::createcsstr("\n \n \n \n All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit)));
-    }
-    else
-    {
-        missed++;   
-        il2cpp_utils::RunMethod(MISSED.textMesh , "set_text", il2cpp_utils::createcsstr("\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed)));
+        UpdateNotesLeft();
+        hit++;
+        il2cpp_utils::RunMethod(HIT.textMesh, "set_text", il2cpp_utils::createcsstr("\n \n \n \n All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit)));
     }
     
-    HandleNoteWasCutEvent(self, noteSpawnController, noteController, noteCutInfo);
+    HandleNoteWasCutEvent(self, noteController, noteCutInfo);
 }
     
+MAKE_HOOK_OFFSETLESS(GetNotes, void, Il2CppObject* self, Il2CppObject* difficultyBeatmap, Il2CppObject* overrideEnvironmentSettings, Il2CppObject* overrideColorScheme, Il2CppObject* gameplayModifiers, Il2CppObject* playerSpecificSettings, Il2CppObject* practiceSettings, Il2CppString* backButtonText, bool useTestNoteCutSoundEffects) {
+    Il2CppObject* beatmapData;
+    il2cpp_utils::RunMethod(&beatmapData, difficultyBeatmap, "get_beatmapData");
+    il2cpp_utils::RunMethod(&NotesCount, beatmapData, "get_notesCount");
+    GetNotes(self, difficultyBeatmap, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
+}
+
+MAKE_HOOK_OFFSETLESS(Get360, void, Il2CppObject* self)
+{
+    Il2CppObject *sceneSetupDataObj;
+	Il2CppObject *difficultyBeatmapObj;
+	Il2CppObject *beatmapDataObj;
+	int spawnRotationEventsCount;
+
+	if (!GetFieldValue(&sceneSetupDataObj, self, "_sceneSetupData"))
+	{
+		log(DEBUG, "Failed to get sceneSetupDataObj");
+	}
+	if (!RunMethod(&difficultyBeatmapObj, sceneSetupDataObj, "get_difficultyBeatmap"))
+	{
+		log(DEBUG, "Failed to get difficultyBeatmapObj");
+	}
+	if (!RunMethod(&beatmapDataObj, difficultyBeatmapObj, "get_beatmapData"))
+	{
+		log(DEBUG, "Failed to get beatmapDataObj");
+	}
+	if (!RunMethod(&spawnRotationEventsCount, beatmapDataObj, "get_spawnRotationEventsCount"))
+	{
+		log(DEBUG, "Failed to get spawnRotationEventsCount");
+	}
+    if (spawnRotationEventsCount > 0)
+	{
+		_360 = true;
+	}
+	else
+	{
+        _360 = false;
+	}
+    Get360(self);
+}
+
+
+
 extern "C" void load() {
     log(INFO, "Hello from il2cpp_init!");
     log(INFO, "Installing hooks...");
@@ -110,6 +158,8 @@ extern "C" void load() {
     INSTALL_HOOK_OFFSETLESS(missStart, il2cpp_utils::FindMethodUnsafe("", "ScoreUIController", "Start", 0));    
     INSTALL_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, il2cpp_utils::FindMethodUnsafe("", "ComboUIController", "HandleComboBreakingEventHappened", 0));
     INSTALL_HOOK_OFFSETLESS(NotesStart, il2cpp_utils::FindMethodUnsafe("", "GameEnergyUIPanel", "Start", 0));   
-    INSTALL_HOOK_OFFSETLESS(HandleNoteWasCutEvent, il2cpp_utils::FindMethodUnsafe("", "ScoreController", "HandleNoteWasCutEvent", 3));   
+    INSTALL_HOOK_OFFSETLESS(HandleNoteWasCutEvent, il2cpp_utils::FindMethodUnsafe("", "ScoreController", "HandleNoteWasCutEvent", 2));  
+    INSTALL_HOOK_OFFSETLESS(GetNotes, il2cpp_utils::FindMethodUnsafe("", "StandardLevelScenesTransitionSetupDataSO", "Init", 8)); 
+    INSTALL_HOOK_OFFSETLESS(Get360, il2cpp_utils::FindMethodUnsafe("", "GameCoreSceneSetup", "InstallBindings", 0)); 
     log(INFO, "Installed all hooks!");
 }
