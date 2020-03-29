@@ -84,7 +84,16 @@ MAKE_HOOK_OFFSETLESS(NotesStart, void, Il2CppObject* self)
     {
         log(DEBUG,"oopsies sorry sister! 6");
     }
-Notes.text = std::string("           \n Notes Left: ") + std::to_string(NotesCount);
+    if(_360)
+    {
+        Notes.text = std::string("<align=center>\n \n \n Notes Left: ") + std::to_string(NotesCount) + std::string("<align>");
+    }
+    else
+    {
+        Notes.text = std::string("\n Notes Left: ") + std::to_string(NotesCount);
+    }
+    
+    
     Notes.fontSize = 15.0F;
     Notes.parentTransform = levelNameParent;
     Notes.create();
@@ -122,19 +131,19 @@ MAKE_HOOK_OFFSETLESS(Get360, void, Il2CppObject* self)
 	Il2CppObject *beatmapDataObj;
 	int spawnRotationEventsCount;
 
-	if (!GetFieldValue(&sceneSetupDataObj, self, "_sceneSetupData"))
+	if (!il2cpp_utils::GetFieldValue(&sceneSetupDataObj, self, "_sceneSetupData"))
 	{
 		log(DEBUG, "Failed to get sceneSetupDataObj");
 	}
-	if (!RunMethod(&difficultyBeatmapObj, sceneSetupDataObj, "get_difficultyBeatmap"))
+	if (!il2cpp_utils::RunMethod(&difficultyBeatmapObj, sceneSetupDataObj, "get_difficultyBeatmap"))
 	{
 		log(DEBUG, "Failed to get difficultyBeatmapObj");
 	}
-	if (!RunMethod(&beatmapDataObj, difficultyBeatmapObj, "get_beatmapData"))
+	if (!il2cpp_utils::RunMethod(&beatmapDataObj, difficultyBeatmapObj, "get_beatmapData"))
 	{
 		log(DEBUG, "Failed to get beatmapDataObj");
 	}
-	if (!RunMethod(&spawnRotationEventsCount, beatmapDataObj, "get_spawnRotationEventsCount"))
+	if (!il2cpp_utils::RunMethod(&spawnRotationEventsCount, beatmapDataObj, "get_spawnRotationEventsCount"))
 	{
 		log(DEBUG, "Failed to get spawnRotationEventsCount");
 	}
