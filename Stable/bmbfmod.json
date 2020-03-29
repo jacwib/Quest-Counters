@@ -1,6 +1,6 @@
 {
-    "id": "CountersPlus",
-    "name": "Counters Plus",
+    "id": "QuestCounters",
+    "name": "Quest Counters",
     "author": "Futuremappermydud",
     "description": [
         
@@ -15,10 +15,10 @@
         {
             "type": "HookMod",
             "installAction": {
-                "installLibraryFile": "libCountersPlus.so"
+                "installLibraryFile": "libQuestCounters.so"
             },
             "uninstallAction": {
-                "removeLibraryFile": "libCountersPlus.so"
+                "removeLibraryFile": "libQuestCounters.so"
             }
         }
     ]

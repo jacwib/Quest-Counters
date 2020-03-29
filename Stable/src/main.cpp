@@ -86,11 +86,11 @@ MAKE_HOOK_OFFSETLESS(NotesStart, void, Il2CppObject* self)
     }
     if(_360)
     {
-        Notes.text = std::string("<align=center>\n \n \n Notes Left: ") + std::to_string(NotesCount) + std::string("<align>");
+        Notes.text = std::string("<align="center">\n \n \n Notes Left: ") + std::to_string(NotesCount) + std::string("<align>");
     }
     else
     {
-        Notes.text = std::string("\n Notes Left: ") + std::to_string(NotesCount);
+        Notes.text = std::string("<align=center>\n Notes Left: ") + std::to_string(NotesCount) + std::string("<align>");
     }
     
     
