@@ -53,7 +53,7 @@ void UpdateNotesLeft()
         notesLeft -= 1;
         if(advancedHud)
         {
-            Notes.set("                  <align=center>\n Notes Left: " + std::to_string(notesLeft) + "</align>" + "                             " + GetPercentFromNotesLeftAndNotes(notesLeft, NotesCount) + "%");
+            Notes.set("                  \n Notes Left: " + std::to_string(notesLeft) + "                      " + GetPercentFromNotesLeftAndNotes(notesLeft, NotesCount) + "%");
         }
         else
         {
@@ -62,7 +62,7 @@ void UpdateNotesLeft()
     }
 MAKE_HOOK_OFFSETLESS(StartScoreCounters, void, Il2CppObject* self)
 {
-    StartAverageSpeedCounter(self);
+    //StartAverageSpeedCounter(self);
     StartMissCounter(self);
     StartHitCounter(self);
     StartScoreCounters(self);
@@ -119,7 +119,7 @@ MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject* self, Il2CppObje
         {
             UpdateNotesLeft();
             hit++;
-            std::string combined5 = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) + "All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
+            std::string combined5 = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) + " All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
             il2cpp_utils::RunMethod(MISSED.textMesh, "set_text", il2cpp_utils::createcsstr(combined5));
         }
     }

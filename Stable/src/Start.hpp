@@ -41,3 +41,4 @@ void StartNotesLeftCounter(Il2CppObject* self);
 void StartMissCounter(Il2CppObject* self); 
 void StartHitCounter(Il2CppObject* self);
 void StartAverageSpeedCounter(Il2CppObject* self);
+std::string GetPercentFromNotesLeftAndNotes(int NotesLeft, int Notes);

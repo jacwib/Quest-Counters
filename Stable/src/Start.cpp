@@ -14,10 +14,11 @@ void StartNotesLeftCounter(Il2CppObject* self)
     {
         log(DEBUG, "oopsies sorry sister! 6");
     }
-    Notes.text = std::string("<align=center>\n Notes Left: ") + std::to_string(NotesCount) + std::string("</align>");
     Notes.fontSize = 15.0F;
     Notes.parentTransform = levelNameParent;
     Notes.create();
+    Notes.set("                              \n Notes Left: " + std::to_string(notesLeft) + "                   " + GetPercentFromNotesLeftAndNotes(notesLeft, NotesCount) + "%");
+
 }
 void StartMissCounter(Il2CppObject* self)
 {
