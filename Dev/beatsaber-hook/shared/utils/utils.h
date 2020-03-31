@@ -32,7 +32,7 @@ template <typename... Ts> struct is_vector<std::vector<Ts...> > : std::true_type
 #define RET_UNLESS(retval, expr) ({ \
     const auto& __temp__ = expr; \
     if (!__temp__) { \
-        log(ERROR, "%s (at %s:%i) returned false!", #expr, __FILE__, __LINE__); \
+        log(ERROR, "%s (in %s at %s:%i) returned false!", #expr, __PRETTY_FUNCTION__, __FILE__, __LINE__); \
         return retval; \
     } \
     __temp__; \
@@ -69,17 +69,31 @@ static void StartCoroutine(Function&& fun, Args&&... args) {
     t->detach();
 }
 
-// logs the file and line, sleeps to allow logs to flush, then terminates program
-void safeAbort(const char* file, int line);
+// logs the function, file and line, sleeps to allow logs to flush, then terminates program
+void safeAbort(const char* func, const char* file, int line);
 // sets "file" and "line" to the file and line you call this macro from
-#define SAFE_ABORT() safeAbort(__FILE__, __LINE__)
+#define SAFE_ABORT() safeAbort(__PRETTY_FUNCTION__, __FILE__, __LINE__)
 
 template<class T>
-auto crashUnless(T&& arg, const char* file, int line) {
-    if (!arg) safeAbort(file, line);
+auto crashUnless(T&& arg, const char* func, const char* file, int line) {
+    if (!arg) safeAbort(func, file, line);
     return std::forward<T>(arg);
 }
-#define CRASH_UNLESS(expr) crashUnless(expr, __FILE__, __LINE__)
+#define CRASH_UNLESS(expr) crashUnless(expr, __PRETTY_FUNCTION__, __FILE__, __LINE__)
+
+template<class T>
+intptr_t getBase(T pc) {
+    static_assert(sizeof(T) >= sizeof(void*));
+    Dl_info info;
+    RET_0_UNLESS(dladdr((void*)pc, &info));
+    return (intptr_t)info.dli_fbase;
+}
+
+template<class T>
+ptrdiff_t asOffset(T pc) {
+    auto base = getBase(pc);
+    return (ptrdiff_t)(((intptr_t)pc) - base);
+}
 
 extern "C" {
 #endif /* __cplusplus */
@@ -98,16 +112,16 @@ void print(std::stringstream& ss, LOG_VERBOSE_TYPE lvl = INFO);
 //   It will not follow pointers that it has already analyzed as a result of the current call.
 void analyzeBytes(const void* ptr);
 
-long long getRealOffset(const void* offset);
-long long baseAddr(const char* soname);
+intptr_t getRealOffset(const void* offset);
+intptr_t baseAddr(const char* soname);
 
 // Only wildcard is ? and ?? - both are handled the same way. They will skip exactly 1 byte (2 hex digits)
-long long findPattern(long long dwAddress, const char* pattern, long long dwSearchRangeLen = 0x1000000);
+intptr_t findPattern(intptr_t dwAddress, const char* pattern, intptr_t dwSearchRangeLen = 0x1000000);
 // Same as findPattern but will continue scanning to make sure your pattern is sufficiently specific.
 // Each candidate will be logged. label should describe what you're looking for, like "Class::Init".
 // Sets "multiple" iff multiple matches are found, and outputs a log warning message.
 // Returns the first match, if any.
-long long findUniquePattern(bool& multiple, long long dwAddress, const char* pattern, const char* label = 0, long long dwSearchRangeLen = 0x1000000);
+intptr_t findUniquePattern(bool& multiple, intptr_t dwAddress, const char* pattern, const char* label = 0, intptr_t dwSearchRangeLen = 0x1000000);
 
 #define MAKE_HOOK(name, addr, retval, ...) \
 void* addr_ ## name = (void*) addr; \
@@ -201,6 +215,7 @@ inlineHook((uint32_t)addr); \
 }
 #endif /* __cplusplus */
 
+// TODO: Remove
 #include "instruction-parsing.hpp"
 
 #endif /* UTILS_H_INCLUDED */

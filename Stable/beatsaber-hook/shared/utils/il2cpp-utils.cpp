@@ -59,6 +59,7 @@ namespace il2cpp_utils {
     typedef std::pair<std::string, std::vector<const Il2CppType*>> classesNamesTypesInnerPairType;
     static std::unordered_map<std::pair<Il2CppClass*, classesNamesTypesInnerPairType>, const MethodInfo*, hash_pair_3> classesNamesTypesToMethodsCache;
     static std::unordered_map<std::pair<Il2CppClass*, std::string>, FieldInfo*, hash_pair> classesNamesToFieldsCache;
+    static std::unordered_map<std::pair<Il2CppClass*, std::string>, const PropertyInfo*, hash_pair> classesNamesToPropertiesCache;
     // Maximum length of characters of an exception message - 1
     #define EXCEPTION_MESSAGE_SIZE 4096
 
@@ -81,45 +82,34 @@ namespace il2cpp_utils {
         return types;
     }
 
+    const Il2CppType* MakeRef(const Il2CppType* type) {
+        if (type->byref) return type;
+        // could use Class::GetByrefType instead of &->this_arg but it does the same thing
+        return &il2cpp_functions::class_from_il2cpp_type(type)->this_arg;
+    }
+
+    const Il2CppType* UnRef(const Il2CppType* type) {
+        if (!type->byref) return type;
+        return il2cpp_functions::class_get_type(il2cpp_functions::class_from_il2cpp_type(type));
+    }
+
     bool IsConvertible(const Il2CppType* to, const Il2CppType* from) {
-        if (il2cpp_functions::type_equals(to, from)) {
-            log(DEBUG, "IsConvertible: types equal (%s), returning true", TypeGetSimpleName(to));
-            return true;
+        if (to->byref) {
+            if (!from->byref) {
+                log(DEBUG, "IsConvertible: to (%s, %p) is ref/out while from (%s, %p) is not. Not convertible.",
+                    TypeGetSimpleName(to), to, TypeGetSimpleName(from), from);
+                return false;
+            } else {
+                log(DEBUG, "IsConvertible: to (%s, %p) and from (%s, %p) are both ret/out. May be convertible.",
+                    TypeGetSimpleName(to), to, TypeGetSimpleName(from), from);
+            }
         }
-        log(DEBUG, "%s (%x) != %s (%x)", TypeGetSimpleName(to), to->type, TypeGetSimpleName(from), from->type);
-
-        auto classFrom = il2cpp_functions::class_from_il2cpp_type(from);
         auto classTo = il2cpp_functions::class_from_il2cpp_type(to);
-        if (classTo) {
-            if (classTo->enumtype) {
-                auto e = classTo->element_class;
-                if (e != classTo) {
-                    log(DEBUG, "IsConvertible: extracted value type '%s' from Enum 'to', recursing!", TypeGetSimpleName(&e->byval_arg));
-                    if (IsConvertible(&e->byval_arg, from)) return true;
-                }
-            }
-
-            // See if 'from' satisfies the interface represented by 'to'.
-            if (IsInterface(classTo)) {
-                void* iter = nullptr;
-                Il2CppClass* interface;
-                while ((interface = il2cpp_functions::class_get_interfaces(classFrom, &iter))) {
-                    log(DEBUG, "IsConvertible: comparing interfaces: %s, %s", ClassStandardName(classTo).c_str(), ClassStandardName(interface).c_str());
-                    if (classTo == interface) {
-                        log(DEBUG, "IsConvertible: interface match (%s), returning true!", ClassStandardName(classTo).c_str());
-                        return true;
-                    }
-                }
-            }
-        }
-
-        // Try from's parent
-        if (classFrom && classFrom->parent && classFrom->parent != classFrom) {
-            log(DEBUG, "IsConvertible: recursing on 'from's parent");
-            return IsConvertible(to, il2cpp_functions::class_get_type(classFrom->parent));
-        }
-        log(DEBUG, "IsConvertible: no match found, returning false!");
-        return false;
+        auto classFrom = il2cpp_functions::class_from_il2cpp_type(from);
+        auto ret = il2cpp_functions::class_is_assignable_from(classTo, classFrom);
+        log(DEBUG, "IsConvertible: class_is_assignable_from(%s, %s) returned %s",
+            ClassStandardName(classTo).c_str(), ClassStandardName(classFrom).c_str(), ret ? "true" : "false");
+        return ret;
     }
 
     bool ParameterMatch(const MethodInfo* method, const Il2CppType* const* type_arr, decltype(MethodInfo::parameters_count) count) {
@@ -139,6 +129,7 @@ namespace il2cpp_utils {
 
     static std::unordered_map<Il2CppClass*, const char*> typeMap;
 
+    // TODO: somehow append "out/ref " to the front if type->byref? Make a TypeStandardName?
     const char* TypeGetSimpleName(const Il2CppType* type) {
         il2cpp_functions::Init();
 
@@ -303,7 +294,7 @@ namespace il2cpp_utils {
         auto field = il2cpp_functions::class_get_field_from_name(klass, fieldName.data());
         if (!field) {
             log(ERROR, "could not find field %s in class '%s'!", fieldName.data(), ClassStandardName(klass).c_str());
-            LogFields(klass, true);
+            LogFields(klass);
             if (klass->parent != klass) field = FindField(klass->parent, fieldName);
         }
         classesNamesToFieldsCache.insert({key, field});
@@ -321,8 +312,7 @@ namespace il2cpp_utils {
         il2cpp_functions::Init();
         RET_0_UNLESS(klass);
 
-        auto field = FindField(klass, fieldName);
-        if (!field) return nullptr;
+        auto field = RET_0_UNLESS(FindField(klass, fieldName));
         return GetFieldValue(nullptr, field);
     }
 
@@ -330,18 +320,14 @@ namespace il2cpp_utils {
         il2cpp_functions::Init();
         RET_0_UNLESS(instance);
 
-        auto field = FindField(instance, fieldName);
-        if (!field) return nullptr;
+        auto field = RET_0_UNLESS(FindField(instance, fieldName));
         return GetFieldValue(instance, field);
     }
 
     bool SetFieldValue(Il2CppObject* instance, FieldInfo* field, void* value) {
         il2cpp_functions::Init();
+        RET_0_UNLESS(field);
 
-        if (!field) {
-            log(ERROR, "il2cpp_utils: SetFieldValue: Null field parameter!");
-            return false;
-        }
         if (instance) {
             il2cpp_functions::field_set_value(instance, field, value);
         } else { // Fallback to perform a static field set
@@ -354,8 +340,7 @@ namespace il2cpp_utils {
         il2cpp_functions::Init();
         RET_0_UNLESS(klass);
 
-        auto field = FindField(klass, fieldName);
-        if (!field) return false;
+        auto field = RET_0_UNLESS(FindField(klass, fieldName));
         return SetFieldValue(nullptr, field, value);
     }
 
@@ -363,9 +348,60 @@ namespace il2cpp_utils {
         il2cpp_functions::Init();
         RET_0_UNLESS(instance);
 
-        auto field = FindField(instance, fieldName);
-        if (!field) return false;
+        auto field = RET_0_UNLESS(FindField(instance, fieldName));
         return SetFieldValue(instance, field, value);
+    }
+
+    const PropertyInfo* FindProperty(Il2CppClass* klass, std::string_view propName) {
+        il2cpp_functions::Init();
+        RET_0_UNLESS(klass);
+
+        // Check Cache
+        auto key = std::pair<Il2CppClass*, std::string>(klass, propName);
+        auto itr = classesNamesToPropertiesCache.find(key);
+        if (itr != classesNamesToPropertiesCache.end()) {
+            return itr->second;
+        }
+        auto prop = il2cpp_functions::class_get_property_from_name(klass, propName.data());
+        if (!prop) {
+            log(ERROR, "could not find property %s in class '%s'!", propName.data(), ClassStandardName(klass).c_str());
+            LogProperties(klass);
+            if (klass->parent != klass) prop = FindProperty(klass->parent, propName);
+        }
+        classesNamesToPropertiesCache.insert({key, prop});
+        return prop;
+    }
+
+    Il2CppObject* GetPropertyValue(Il2CppClass* klass, std::string_view propName) {
+        il2cpp_functions::Init();
+        RET_0_UNLESS(klass);
+
+        auto prop = RET_0_UNLESS(FindProperty(klass, propName));
+        return GetPropertyValue<void>(nullptr, prop);
+    }
+
+    Il2CppObject* GetPropertyValue(Il2CppObject* instance, std::string_view propName) {
+        il2cpp_functions::Init();
+        RET_0_UNLESS(instance);
+
+        auto prop = RET_0_UNLESS(FindProperty(instance, propName));
+        return GetPropertyValue(instance, prop);
+    }
+
+    bool SetPropertyValue(Il2CppClass* klass, std::string_view propName, void* value) {
+        il2cpp_functions::Init();
+        RET_0_UNLESS(klass);
+
+        auto prop = RET_0_UNLESS(FindProperty(klass, propName));
+        return SetPropertyValue<void>(nullptr, prop, value);
+    }
+
+    bool SetPropertyValue(Il2CppObject* instance, std::string_view propName, void* value) {
+        il2cpp_functions::Init();
+        RET_0_UNLESS(instance);
+
+        auto prop = RET_0_UNLESS(FindProperty(instance, propName));
+        return SetPropertyValue(instance, prop, value);
     }
 
     Il2CppReflectionType* MakeGenericType(Il2CppReflectionType* gt, Il2CppArray* types) {
@@ -480,13 +516,55 @@ namespace il2cpp_utils {
         if (klass->name) il2cpp_functions::Class_Init(klass);
         if (logParents) log(INFO, "class name: %s", ClassStandardName(klass).c_str());
 
-        log(DEBUG, "property_count: %i, field_count: %i", klass->property_count, klass->field_count);
+        log(DEBUG, "field_count: %i", klass->field_count);
         while ((field = il2cpp_functions::class_get_fields(klass, &myIter))) {
             LogField(field);
         }
         usleep(100);
         if (logParents && klass->parent && klass->parent != klass) {
             LogFields(klass->parent, logParents);
+        }
+    }
+
+    void LogProperty(const PropertyInfo* prop) {
+        il2cpp_functions::Init();
+        RET_V_UNLESS(prop);
+
+        auto flags = il2cpp_functions::property_get_flags(prop);
+        const char* flagStr = (flags & FIELD_ATTRIBUTE_STATIC) ? "static " : "";
+        auto name = il2cpp_functions::property_get_name(prop);
+        name = name ? name : "__noname__";
+        auto getter = il2cpp_functions::property_get_get_method(prop);
+        auto getterName = getter ? il2cpp_functions::method_get_name(getter) : "";
+        auto setter = il2cpp_functions::property_get_set_method(prop);
+        auto setterName = setter ? il2cpp_functions::method_get_name(setter) : "";
+        const Il2CppType* type = nullptr;
+        if (getter) {
+            type = il2cpp_functions::method_get_return_type(getter);
+        } else if (setter) {
+            type = il2cpp_functions::method_get_param(setter, 0);
+        }
+        auto typeStr = type ? TypeGetSimpleName(type) : "?type?";
+
+        log(DEBUG, "%s%s %s { %s; %s; }; // flags: 0x%.4X", flagStr, typeStr, name, getterName, setterName, flags);
+    }
+
+    void LogProperties(Il2CppClass* klass, bool logParents) {
+        il2cpp_functions::Init();
+        RET_V_UNLESS(klass);
+
+        void* myIter = nullptr;
+        const PropertyInfo* prop;
+        if (klass->name) il2cpp_functions::Class_Init(klass);
+        if (logParents) log(INFO, "class name: %s", ClassStandardName(klass).c_str());
+
+        log(DEBUG, "property_count: %i", klass->property_count);
+        while ((prop = il2cpp_functions::class_get_properties(klass, &myIter))) {
+            LogProperty(prop);
+        }
+        usleep(100);
+        if (logParents && klass->parent && klass->parent != klass) {
+            LogProperties(klass->parent, logParents);
         }
     }
 
@@ -676,6 +754,9 @@ namespace il2cpp_utils {
         log(DEBUG, "element class: %p (self = %p)", element, klass);
         if (element && element != klass && logParents) LogClass(element, logParents);
 
+        log(DEBUG, "%i =======PROPERTIES=======", indent);
+        LogProperties(klass);
+        log(DEBUG, "%i =====END PROPERTIES=====", indent);
         log(DEBUG, "%i =========FIELDS=========", indent);
         LogFields(klass);
         log(DEBUG, "%i =======END FIELDS=======", indent);
@@ -690,7 +771,7 @@ namespace il2cpp_utils {
     static std::unordered_map<Il2CppClass*, std::map<std::string, Il2CppGenericClass*, doj::alphanum_less<std::string>>> classToGenericClassMap;
     void BuildGenericsMap() {
         auto metadataReg = RET_V_UNLESS(*il2cpp_functions::s_Il2CppMetadataRegistrationPtr);
-        log(DEBUG, "metadataReg: %p, offset = %llX", metadataReg, ((long long)metadataReg) - getRealOffset(nullptr));
+        log(DEBUG, "metadataReg: %p, offset = %lX", metadataReg, ((intptr_t)metadataReg) - getRealOffset(0));
 
         int uncached_class_count = 0;
         for (int i=0; i < metadataReg->genericClassesCount; i++) {
