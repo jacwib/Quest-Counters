@@ -35,6 +35,7 @@ CustomUI::TextObject averageText;
 CustomUI::TextObject MISSED;
 CustomUI::TextObject HIT;
 CustomUI::TextObject Notes;
+CustomUI::RawImageObject Image;
 CustomUI::TextObject LeftSaberSwingSpeed;
 CustomUI::TextObject RightSaberSwingSpeed;
 
@@ -43,6 +44,14 @@ std::string GetPercentFromNotesLeftAndNotes(int NotesLeft, int Notes)
        int oof = (Notes - NotesLeft) * 100 / (float)Notes;
         return std::to_string(oof);
     }
+
+std::string GetShortStringFromLongAssFloat(float victim)
+{
+    int cutVictem = (int)victim;
+    std::string FinalTortureSequence = std::to_string(cutVictem);
+    return FinalTortureSequence;
+}
+
 float SafeDivideScore(int total, int count)
     {
         float result = round(((double)(total)) / (count));
@@ -51,78 +60,100 @@ float SafeDivideScore(int total, int count)
 void UpdateNotesLeft()
     {
         notesLeft -= 1;
-        if(advancedHud)
-        {
-            Notes.set("                  <align=center>\n Notes Left: " + std::to_string(notesLeft) + "</align>" + "                             " + GetPercentFromNotesLeftAndNotes(notesLeft, NotesCount) + "%");
-        }
-        else
-        {
-            Notes.set("<align=center>\n Notes Left: " + std::to_string(notesLeft) + "</align>");
-        }
+        Notes.set("\nNotes Left: " + std::to_string(notesLeft) + " (" + GetPercentFromNotesLeftAndNotes(notesLeft, NotesCount) + "%)");
     }
+
 MAKE_HOOK_OFFSETLESS(StartScoreCounters, void, Il2CppObject* self)
 {
     StartAverageSpeedCounter(self);
     StartMissCounter(self);
     StartHitCounter(self);
     StartScoreCounters(self);
-}   
-MAKE_HOOK_OFFSETLESS(StartEnergyCounters, void, Il2CppObject* self)
-{
+    
     StartNotesLeftCounter(self);
-    StartEnergyCounters(self);
-}
-MAKE_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, void, Il2CppObject* self) {
-    UpdateNotesLeft();
-    missed++;
-    std::string combine2 = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed);
-    std::string combine3 = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) + " All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
-    if (_360)
-    {
-        il2cpp_utils::RunMethod(MISSED.textMesh, "set_text", il2cpp_utils::createcsstr(combine3));
-    }
-    else
-    {
-        
-        il2cpp_utils::RunMethod(MISSED.textMesh, "set_text", il2cpp_utils::createcsstr(combine2));
-    }
-    HandleComboBreakingEventHappened(self);
-}
-//total hit notes
-MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject* self, Il2CppObject* noteController, Il2CppObject* noteCutInfo)
+}   
+MAKE_HOOK_OFFSETLESS(StartLevelDetailButtons, void, Il2CppObject* self)
 {
-    std::string combined5 = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) + "All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
-    if(!_360)
-    { 
-        bool allIsOK;
-        if (!il2cpp_utils::RunMethod(&allIsOK, noteCutInfo, "get_allIsOK")) 
-        {
-            log(CRITICAL, "Failed to get_allIsOK");
-        }
-        if(allIsOK)
-        {
-            UpdateNotesLeft();
-            hit++;
-            std::string combined1 = "\n \n \n \n All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
-            
-            il2cpp_utils::RunMethod(HIT.textMesh, "set_text", il2cpp_utils::createcsstr(combined1));
-        }
-    }
-    else
+    StartImage(self);
+    StartLevelDetailButtons(self);
+}
+MAKE_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, void, Il2CppObject* self, Il2CppObject* noteController) {
+    Il2CppObject* NoteData;
+    int NoteType;
+    il2cpp_utils::RunMethod(&NoteData, noteController, "get_noteData");
+    il2cpp_utils::RunMethod(&NoteType, NoteData, "get_noteType");
+    if (NoteType == 0 || NoteType == 1)
     {
-        bool allIsOK;
-        if (!il2cpp_utils::RunMethod(&allIsOK, noteCutInfo, "get_allIsOK")) 
+        UpdateNotesLeft();
+        missed++;
+        std::string combine2 = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed);
+        std::string combine3 = "\n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) + " All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
+        if (_360)
         {
-            log(CRITICAL, "Failed to get_allIsOK"); 
+            il2cpp_utils::RunMethod(MISSED.textMesh, "set_text", il2cpp_utils::createcsstr(combine3));
         }
-        if (allIsOK)
+        else
         {
-            UpdateNotesLeft();
-            hit++;
-            il2cpp_utils::RunMethod(MISSED.textMesh, "set_text", il2cpp_utils::createcsstr(combined5));
+
+            il2cpp_utils::RunMethod(MISSED.textMesh, "set_text", il2cpp_utils::createcsstr(combine2));
         }
-    }
-    HandleNoteWasCutEvent(self, noteController, noteCutInfo);
+
+    }        
+    HandleComboBreakingEventHappened(self, noteController);
+}   
+    //total hit notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+    MAKE_HOOK_OFFSETLESS(HandleNoteWasCutEvent, void, Il2CppObject * self, Il2CppObject * noteController, Il2CppObject * noteCutInfo)
+    {
+        std::string combine2 = "\n \n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed);
+                     
+        std::string combine3 = "\n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) + " All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
+        std::string combined5 = "\n \n<color=#FF6347>Missed</color> Notes: " + std::to_string(missed) + " All <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
+        if (!_360)
+        {
+            bool allIsOK;
+            if (!il2cpp_utils::RunMethod(&allIsOK, noteCutInfo, "get_allIsOK"))
+            {
+                log(CRITICAL, "Failed to get_allIsOK");
+            }
+            if (allIsOK)
+            {
+                UpdateNotesLeft();
+                hit++;
+                std::string combined1 = "\n \n \n \nAll <color=#00FF00>Hit</color> Notes: " + std::to_string(hit);
+
+                il2cpp_utils::RunMethod(HIT.textMesh, "set_text", il2cpp_utils::createcsstr(combined1));
+            }
+            else
+            {
+                UpdateNotesLeft();
+                missed++;
+
+                il2cpp_utils::RunMethod(MISSED.textMesh, "set_text", il2cpp_utils::createcsstr(combine2));
+            }
+        }
+        else
+        {
+            bool allIsOK;
+            if (!il2cpp_utils::RunMethod(&allIsOK, noteCutInfo, "get_allIsOK"))
+            {
+                log(CRITICAL, "Failed to get_allIsOK");
+            }
+            if (allIsOK)
+            {
+                UpdateNotesLeft();
+                hit++;
+                il2cpp_utils::RunMethod(MISSED.textMesh, "set_text", il2cpp_utils::createcsstr(combined5));
+            }
+            else
+            {
+                UpdateNotesLeft();
+                missed++;
+
+                il2cpp_utils::RunMethod(MISSED.textMesh, "set_text", il2cpp_utils::createcsstr(combine3));
+            }
+        }
+        HandleNoteWasCutEvent(self, noteController, noteCutInfo);
+        
 }
     
 MAKE_HOOK_OFFSETLESS(GetNotes, void, Il2CppObject* self, Il2CppObject* difficultyBeatmap, Il2CppObject* overrideEnvironmentSettings, Il2CppObject* overrideColorScheme, Il2CppObject* gameplayModifiers, Il2CppObject* playerSpecificSettings, Il2CppObject* practiceSettings, Il2CppString* backButtonText, bool useTestNoteCutSoundEffects) {
@@ -132,19 +163,31 @@ MAKE_HOOK_OFFSETLESS(GetNotes, void, Il2CppObject* self, Il2CppObject* difficult
     GetNotes(self, difficultyBeatmap, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
 }
 MAKE_HOOK_OFFSETLESS(Get_SaberSpeed, void, Il2CppObject* self) {
+    Get_SaberSpeed(self);
     Il2CppObject* LeftSaber;
     Il2CppObject* RightSaber;
 
     il2cpp_utils::RunMethod(&LeftSaberSpeed, self, "get_bladeSpeed");
     il2cpp_utils::RunMethod(&RightSaberSpeed, self, "get_bladeSpeed");
     RightSpeed = std::to_string(RightSaberSpeed), LeftSpeed = std::to_string(LeftSaberSpeed);
-    Get_SaberSpeed(self);
+    int speed = (int)LeftSaberSpeed;
+    if (!_360)
+    {
+        LeftSaberSwingSpeed.set("\n\n\n<color=#FF0000>Saber</color>  Speed: " + std::to_string(speed));
+    }
+    else
+    {
+        LeftSaberSwingSpeed.set("\n\n<color=#FF0000>Saber</color>  Speed: " + std::to_string(speed));
+    }
+    
+    
 }
 
 // Thanks Henwill 
 MAKE_HOOK_OFFSETLESS(RawScore, void, Il2CppObject* noteCutInfo, int* beforeCutRawScore, int* afterCutRawScore, int* cutDistanceRawScore) {
     RawScore(noteCutInfo, beforeCutRawScore, afterCutRawScore, cutDistanceRawScore);
     std::string combined6 = std::string("Average Score: ") + averageFinal + "\nAverage Accuracy: " + averageAccFinal + "\nAverage Session Score: " + averageSessionFinal;
+    std::string combined7 = std::string("Average Score: ") + averageFinal + "\nAverage Accuracy: " + averageAccFinal + "\nAverage Session Score: " + averageSessionFinal + "\n<color=#FFA500><size=75%>Thanks Henwill For these</size></color>";
     if(runScores) {
         int beforeCut = *beforeCutRawScore;
         int afterCut = *afterCutRawScore;
@@ -167,7 +210,15 @@ MAKE_HOOK_OFFSETLESS(RawScore, void, Il2CppObject* noteCutInfo, int* beforeCutRa
         sprintf(averageFinal, "%.2f", average);
         sprintf(averageAccFinal, "%.2f", averageAcc);
         sprintf(averageSessionFinal, "%.2f", sessionAverage);
-        il2cpp_utils::RunMethod(averageText.textMesh, "set_text", il2cpp_utils::createcsstr(combined6));
+        std::string Percent = GetPercentFromNotesLeftAndNotes(notesLeft, NotesCount);
+        if (Percent > "75")
+        {
+            il2cpp_utils::RunMethod(averageText.textMesh, "set_text", il2cpp_utils::createcsstr(combined7));
+        }
+        else
+        {
+            il2cpp_utils::RunMethod(averageText.textMesh, "set_text", il2cpp_utils::createcsstr(combined6));
+        }
         runScores = false;
     }
 }
@@ -239,8 +290,8 @@ extern "C" void load() {
     log(INFO, "Hello from il2cpp_init!");
     log(INFO, "Installing hooks...");
     INSTALL_HOOK_OFFSETLESS(StartScoreCounters, il2cpp_utils::FindMethodUnsafe("", "ScoreUIController", "Start", 0));
-    INSTALL_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, il2cpp_utils::FindMethodUnsafe("", "ComboUIController", "HandleComboBreakingEventHappened", 0));
-    INSTALL_HOOK_OFFSETLESS(StartEnergyCounters, il2cpp_utils::FindMethodUnsafe("", "GameEnergyUIPanel", "Start", 0));
+    INSTALL_HOOK_OFFSETLESS(HandleComboBreakingEventHappened, il2cpp_utils::FindMethodUnsafe("", "ScoreController", "HandleNoteWasMissedEvent", 1));
+    //INSTALL_HOOK_OFFSETLESS(StartLevelDetailButtons, il2cpp_utils::FindMethodUnsafe("", "StandardLevelDetailView", "RefreshContent", 0));
     INSTALL_HOOK_OFFSETLESS(HandleNoteWasCutEvent, il2cpp_utils::FindMethodUnsafe("", "ScoreController", "HandleNoteWasCutEvent", 2));  
     INSTALL_HOOK_OFFSETLESS(GetNotes, il2cpp_utils::FindMethodUnsafe("", "StandardLevelScenesTransitionSetupDataSO", "Init", 8)); 
     INSTALL_HOOK_OFFSETLESS(Get_SaberSpeed, il2cpp_utils::FindMethodUnsafe("", "Saber", "ManualUpdate", 0));   
@@ -250,4 +301,5 @@ extern "C" void load() {
     INSTALL_HOOK_OFFSETLESS(Start, il2cpp_utils::FindMethodUnsafe("", "ScoreUIController", "Start", 0));
     INSTALL_HOOK_OFFSETLESS(Get360, il2cpp_utils::FindMethodUnsafe("", "StandardLevelScenesTransitionSetupDataSO", "Init", 8)); 
     log(INFO, "Installed all hooks!");
+//    SetDefault();
 }

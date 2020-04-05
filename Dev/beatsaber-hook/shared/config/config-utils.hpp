@@ -41,6 +41,6 @@ typedef enum JsonParseError {
 
 // CONFIG
 
-#define CONFIG_PATH "/sdcard/Android/data/com.beatgames.beatsaber/files/mod_cfgs/"
+#define CONFIG_PATH "/sdcard/Counters/"
 
 #endif /* CONFIG_UTILS_H */

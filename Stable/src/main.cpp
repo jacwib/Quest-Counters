@@ -53,7 +53,7 @@ void UpdateNotesLeft()
         notesLeft -= 1;
         if(advancedHud)
         {
-            Notes.set("                  \n Notes Left: " + std::to_string(notesLeft) + "                      " + GetPercentFromNotesLeftAndNotes(notesLeft, NotesCount) + "%");
+            Notes.set("\n Notes Left: " + std::to_string(notesLeft) + GetPercentFromNotesLeftAndNotes(notesLeft, NotesCount) + "%");
         }
         else
         {
