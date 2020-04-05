@@ -27,7 +27,7 @@ void StartNotesLeftCounter(Il2CppObject* self)
     
     Notes.parentTransform = levelNameParent;
     Notes.create();
-    Notes.set("\nNotes Left: " + std::to_string(notesLeft) + " (" + GetPercentFromNotesLeftAndNotes(notesLeft, NotesCount) + "%)");
+    Notes.set("\n\nNotes Left: " + std::to_string(notesLeft) + " (" + GetPercentFromNotesLeftAndNotes(notesLeft, NotesCount) + "%)");
 }
 void StartMissCounter(Il2CppObject* self)
 {
@@ -53,7 +53,7 @@ void StartMissCounter(Il2CppObject* self)
     }
     else
     {
-        MISSED.text = std::string("\n \n<color=#FF6347>Missed</color> Notes: 0") + std::string(" All <color=#00FF00>Hit</color> Notes: 0");
+        MISSED.text = std::string("\n \n\n<color=#FF6347>Missed</color> Notes: 0") + std::string(" All <color=#00FF00>Hit</color> Notes: 0");
         MISSED.sizeDelta = {5, -6};
     }
     MISSED.create();
